@@ -67,6 +67,7 @@ struct Settings {
     pub move_leg: bool,
     pub render_layer: RenderLayer,
     pub vrma: String,
+    pub regen: bool,
 }
 
 fn setup(mut commands: Commands, mut settings: ResMut<Settings>) {
@@ -140,16 +141,23 @@ fn load_vrma(
     asset_server: Res<AssetServer>,
     mut commands: Commands,
     mut prevA: Local<String>,
+    mut vrms: Query<Entity, With<move_leg::VrmaHandle>>,
     settings: Res<Settings>,
 )
 {
-    if prevA.as_str() == settings.vrma.as_str() {
+    if (prevA.as_str() == settings.vrma.as_str()) {
+       
         return;
+    }
+    if let Ok(entity) = vrms.get_single_mut() {
+        info!("delete recur");
+        commands.entity(entity).despawn_recursive();
     }
     let entity = commands.spawn(VrmaBundle{
         vrmaHand:move_leg::VrmaHandle(asset_server.load(settings.vrma.clone())),
   
     }).id();
+    info!("crashDown");
     
     *prevA = settings.vrma.clone();
 }
@@ -196,6 +204,7 @@ fn read_dropped_files(mut events: EventReader<FileDragAndDrop>, mut settings: Re
                     
                     info!("vrmaFile");
                     settings.vrma = path.to_string();
+                    settings.regen = true;
                 }
                 else{
                 
@@ -206,6 +215,7 @@ fn read_dropped_files(mut events: EventReader<FileDragAndDrop>, mut settings: Re
 
                     info!("DroppedFile: {}", path);
                     settings.model = path.to_string();
+                    settings.regen = true;
                 }
             }
         }

@@ -173,7 +173,7 @@ pub(crate) struct AnimationContext {
 /// Plays a VRMA animation on the VRM humanoid bones.
 pub fn move_leg(
     mut context: Local<Option<AnimationContext>>,
-    settings: Res<Settings>,
+    mut settings: ResMut<Settings>,
     time: Res<Time>,
     mut bones: Query<(&mut Transform, &BoneName)>,
     vrmas: Query<&VrmaHandle>,
@@ -182,27 +182,27 @@ pub fn move_leg(
     
     for VrmaHandle(handle) in vrmas.iter() {
         if let Some(vrma) = vrma_assets.get(handle) {
-            info!("VRMA loaded with {} buffers", vrma.buffers.len());
+            //info!("VRMA loaded with {} buffers", vrma.buffers.len());
             let mut vrmaFile = vrma.clone();
         
 
     // Wait for VRM model bones to be loaded before initializing animation context
     if context.is_none() && bones.iter_mut().next().is_none() {
-        println!("fail1"); 
+        info!("fail1"); 
         return;
     }
 
     if settings.vrma.is_empty()
     {
-        println!("fail again");
+        info!("fail again");
         info!("This is an info log");
 
         return;
     }
     // On first run, load the VRMA file and extract animation tracks
-    if context.is_none() {
+    if (context.is_none() || settings.regen == true) {
         info!("pass1"); 
-        
+        *context = None;
         
         //return;
         // Load VRMA (glTF) file
@@ -220,25 +220,25 @@ pub fn move_leg(
         let mut duration = 0.0_f32;
         // Parse each channel into a Track
         for channel in animation.channels() {
-            //println!("pass2?"); 
+            //info!("pass2?"); 
             let target = channel.target();
             let node = target.node();
             // Map glTF node name to BoneName via our parser
-            println!("step1");
+            info!("step1");
             let raw_name = match node.name() {
                 Some(n) => n,
                 None => continue,
             };
-            println!("step2: {}", raw_name);
+            info!("step2: {}", raw_name);
             // Map raw_name to BoneName via our parser
             let bone_name = match parse_bone_name(raw_name) {
                 Some(b) => b,
                 None => {
-                    println!("  → skipping unknown bone `{}`", raw_name);
+                    info!("  → skipping unknown bone `{}`", raw_name);
                     continue;
                 }
             };
-            println!("step3: mapped bone = {:?}", bone_name);
+            info!("step3: mapped bone = {:?}", bone_name);
             // Determine interpolation mode (STEP, LINEAR, or CUBICSPLINE)
             let interpolation = channel.sampler().interpolation();
             // Reader for this channel
@@ -255,7 +255,7 @@ pub fn move_leg(
             
             // Output values (translation, rotation, or scale)
             if let Some(outputs) = reader.read_outputs() {
-                println!("output: {}", raw_name);
+                info!("output: {}", raw_name);
                 match outputs {
                     ReadOutputs::Translations(vals) => {
                         let vecs = vals.map(|arr| Vec3::from(arr)).collect::<Vec<_>>();
@@ -291,13 +291,13 @@ pub fn move_leg(
                 }
             }
             else {
-                println!("read_outputs() == None for bone “{}”", raw_name);
+                info!("read_outputs() == None for bone “{}”", raw_name);
             }
-            println!("output2: {}", raw_name);
+            info!("output2: {}", raw_name);
 
 
         }
-
+        
         // Record original transforms for each tracked bone
         let mut original = HashMap::new();
         for (transform, bone) in bones.iter_mut() {
@@ -308,8 +308,10 @@ pub fn move_leg(
         info!("Found {} animation tracks, duration = {}", tracks.len(),
     duration);
         *context = Some(AnimationContext { duration, tracks, original });
+        settings.regen = false;
     }
     let ctx = context.as_mut().unwrap();
+    ctx.original.clear();
     // If disabled, restore originals and exit
     if !settings.move_leg {
         for (mut transform, bone) in bones.iter_mut() {
@@ -420,6 +422,7 @@ impl AssetLoader for VrmaLoader {
                 buffers :_buffers,
                 images: _images
             } )
+
         })
     }
 

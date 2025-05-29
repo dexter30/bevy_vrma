@@ -110,6 +110,7 @@ pub fn update_ui(mut contexts: EguiContexts, mut settings: ResMut<Settings>) {
                         "handDance.vrma".to_string(),
                         "handDance",
                     );
+                    settings.regen = true;
                 });
 
             ui.separator();
