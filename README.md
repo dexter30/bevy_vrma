@@ -1,8 +1,9 @@
-# bevy_vrm
+# VRMA project bevy_vrma
 
 <!-- cargo-rdme start -->
 
-[Bevy](https://bevyengine.org/) plugin for loading [VRM](https://vrm.dev/en/) avatars.
-Aims to support both the VRM 0.0 and VRM 1.0 standards.
+[Bevy](https://bevyengine.org/) plugin for loading [VRM](https://vrm.dev/en/) 
 
+Project to enable VRMA animations. based on [VRM_viewer](https://github.com/unavi-xyz/bevy_vrm/fork)
 <!-- cargo-rdme end -->
+)

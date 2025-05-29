@@ -32,7 +32,7 @@ impl RenderLayer {
 }
 
 pub fn update_ui(mut contexts: EguiContexts, mut settings: ResMut<Settings>) {
-    bevy_egui::egui::Window::new("VRM Viewer").show(contexts.ctx_mut(), |ui| {
+    bevy_egui::egui::Window::new("Dexters crazy vrma animated (based on vrm viewer) Viewer").show(contexts.ctx_mut(), |ui| {
         ui.vertical(|ui| {
             ui.horizontal(|ui| {
                 ui.spacing_mut().item_spacing.x = 0.0;
@@ -47,6 +47,7 @@ pub fn update_ui(mut contexts: EguiContexts, mut settings: ResMut<Settings>) {
             });
 
             ui.label("Drop a .vrm file into the window to load it.");
+            ui.label("Drop a .vrma file into the window to animate your model.");
 
             ui.separator();
 
@@ -88,6 +89,26 @@ pub fn update_ui(mut contexts: EguiContexts, mut settings: ResMut<Settings>) {
                         &mut settings.model,
                         "suzuha.vrm".to_string(),
                         "suzuha.vrm",
+                    );
+                    ui.selectable_value(
+                        &mut settings.model,
+                        "meno12.vrm".to_string(),
+                        "meno.vrm",
+                    );
+                    ui.selectable_value(
+                        &mut settings.model,
+                        "nia3.vrm".to_string(),
+                        "nia.vrm",
+                    );
+                });
+
+                ComboBox::from_label("DanceFile")
+                .selected_text(settings.vrma.as_str())
+                .show_ui(ui, |ui| {
+                    ui.selectable_value(
+                        &mut settings.vrma,
+                        "handDance.vrma".to_string(),
+                        "handDance",
                     );
                 });
 
